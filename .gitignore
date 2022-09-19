@@ -1,0 +1,7 @@
+.vscode/
+node_modules/
+
+.env
+client_secret.json
+credentials.json
+token.json
