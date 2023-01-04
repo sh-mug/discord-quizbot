@@ -14,7 +14,7 @@ const client = new Client({
 })
 
 client.on('messageCreate', async (message) => {
-  if (!message.author.bot) {
+  if (!message.author.bot && message.channel.name === process.env.CHANNEL_NAME) {
     quiz.onMessage(message)
   }
 })
