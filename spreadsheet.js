@@ -4,18 +4,16 @@ const readline = require('readline')
 const { google } = require('googleapis')
 
 dotenv.config()
-let oAuth2Client = null
+
+const credentials = JSON.parse(fs.readFileSync('credentials.json'))
+const oAuth2Client = new google.auth.OAuth2(
+  credentials.web.client_id,
+  credentials.web.client_secret,
+  credentials.web.redirect_uris[0]
+)
 const sheets = google.sheets({ version: 'v4' })
 
 module.exports.init = async function () {
-  let credentialContent = fs.readFileSync('credentials.json')
-  let credentials = JSON.parse(credentialContent)
-  oAuth2Client = new google.auth.OAuth2(
-    credentials.web.client_id,
-    credentials.web.client_secret,
-    credentials.web.redirect_uris[0]
-  )
-
   if (!fs.existsSync(process.env.GOOGLE_TOKEN_PATH)) {
     await getNewToken()
   }
@@ -30,6 +28,7 @@ async function getNewToken() {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    access_type: 'offline',
   })
 
   console.log('Open this link to authorize the app: ', authUrl)
@@ -67,3 +66,11 @@ module.exports.getSheetList = async function () {
 
   return response.data.sheets.map((sheet) => sheet.properties.title)
 }
+
+oAuth2Client.on('tokens', (tokens) => {
+  if (tokens.refresh_token) {
+    // store the refresh_token in my database!
+    console.log('refresh_token: ', tokens.refresh_token)
+  }
+  console.log('access_token: ', tokens.access_token)
+})
